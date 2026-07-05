@@ -57,8 +57,23 @@ fun SudokuScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { viewModel.loadSample() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Load Sample")
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Load Puzzle")
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        com.example.domain.utils.Difficulty.entries.forEach { diff ->
+                            DropdownMenuItem(
+                                text = { Text(diff.name) },
+                                onClick = {
+                                    viewModel.loadPuzzle(diff)
+                                    menuExpanded = false
+                                }
+                            )
+                        }
                     }
                     IconButton(onClick = onNavigateToBenchmark) {
                         Icon(androidx.compose.material.icons.Icons.Default.BarChart, contentDescription = "Benchmark")
@@ -152,7 +167,8 @@ fun SudokuScreen(
                     selectedCell = uiState.selectedCell,
                     onCellClick = viewModel::selectCell,
                     isSolving = uiState.isSolving,
-                    modifier = Modifier.fillMaxWidth(0.95f).scale(gridScale)
+                    modifier = Modifier.fillMaxWidth(0.95f).scale(gridScale),
+                    onNumberInput = { viewModel.inputNumber(it) }
                 )
             }
 

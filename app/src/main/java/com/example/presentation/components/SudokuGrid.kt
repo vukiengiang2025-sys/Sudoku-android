@@ -1,4 +1,6 @@
 package com.example.presentation.components
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.draw.alpha
 
 import android.os.Build
 import androidx.compose.animation.animateColorAsState
@@ -47,9 +49,25 @@ fun SudokuGrid(
     selectedCell: Pair<Int, Int>?,
     onCellClick: (Int, Int) -> Unit,
     isSolving: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNumberInput: (Int?) -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
+    
+    // Hidden text field focus and state
+    val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+    var textValue by remember { mutableStateOf("") }
+    
+    // Request focus whenever a cell is selected and not solving
+    LaunchedEffect(selectedCell, isSolving) {
+        if (selectedCell != null && !isSolving) {
+            try {
+                focusRequester.requestFocus()
+            } catch (e: Exception) {
+                // Ignore focus request failure
+            }
+        }
+    }
 
     // "Scanner" effect variables
     var scannerY by remember { mutableStateOf(0f) }
@@ -81,6 +99,30 @@ fun SudokuGrid(
             .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
             .padding(4.dp)
     ) {
+        // Hidden text field for capturing keyboard input
+        androidx.compose.foundation.text.BasicTextField(
+            value = textValue,
+            onValueChange = { newValue ->
+                textValue = newValue
+                if (newValue.isNotEmpty()) {
+                    val lastChar = newValue.last()
+                    if (lastChar in '1'..'9') {
+                        onNumberInput(lastChar.toString().toInt())
+                    } else if (lastChar == '0' || lastChar.isWhitespace()) {
+                        onNumberInput(null)
+                    }
+                    textValue = "" // Reset after processing
+                }
+            },
+            modifier = Modifier
+                .size(1.dp)
+                .alpha(0f)
+                .focusRequester(focusRequester),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+            )
+        )
+
         Column(modifier = Modifier.fillMaxSize()) {
             for (blockRow in 0 until 3) {
                 Row(modifier = Modifier.weight(1f)) {

@@ -111,30 +111,18 @@ class SudokuViewModel : ViewModel() {
         }
     }
 
-    fun loadSample() {
+    fun loadPuzzle(difficulty: com.example.domain.utils.Difficulty) {
         if (_uiState.value.isSolving) return
-        val sample = arrayOf(
-            intArrayOf(5, 3, 0, 0, 7, 0, 0, 0, 0),
-            intArrayOf(6, 0, 0, 1, 9, 5, 0, 0, 0),
-            intArrayOf(0, 9, 8, 0, 0, 0, 0, 6, 0),
-            intArrayOf(8, 0, 0, 0, 6, 0, 0, 0, 3),
-            intArrayOf(4, 0, 0, 8, 0, 3, 0, 0, 1),
-            intArrayOf(7, 0, 0, 0, 2, 0, 0, 0, 6),
-            intArrayOf(0, 6, 0, 0, 0, 0, 2, 8, 0),
-            intArrayOf(0, 0, 0, 4, 1, 9, 0, 0, 5),
-            intArrayOf(0, 0, 0, 0, 8, 0, 0, 7, 9)
-        )
-        val newBoard = SudokuBoard().copyGrid { cell ->
-            val v = sample[cell.row][cell.col]
-            if (v != 0) cell.copy(value = v, status = CellStatus.INITIAL)
-            else cell.copy(value = null, status = CellStatus.USER_INPUT)
-        }
+        
+        val newBoard = com.example.domain.utils.SudokuGenerator.generate(difficulty)
+        
         _uiState.update { 
             it.copy(
                 board = newBoard, 
                 stats = SolverStats(), 
                 isSolved = false, 
-                noSolution = false 
+                noSolution = false,
+                selectedCell = null
             ) 
         }
     }
