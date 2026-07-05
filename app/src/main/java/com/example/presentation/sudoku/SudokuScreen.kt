@@ -26,7 +26,10 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
-fun SudokuScreen(viewModel: SudokuViewModel) {
+fun SudokuScreen(
+    viewModel: SudokuViewModel,
+    onNavigateToBenchmark: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Win animation state
@@ -56,6 +59,9 @@ fun SudokuScreen(viewModel: SudokuViewModel) {
                 actions = {
                     IconButton(onClick = { viewModel.loadSample() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Load Sample")
+                    }
+                    IconButton(onClick = onNavigateToBenchmark) {
+                        Icon(androidx.compose.material.icons.Icons.Default.BarChart, contentDescription = "Benchmark")
                     }
                 }
             )
