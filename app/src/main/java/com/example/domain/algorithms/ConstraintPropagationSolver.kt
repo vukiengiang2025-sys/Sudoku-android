@@ -21,10 +21,11 @@ class ConstraintPropagationSolver : SudokuAlgorithm {
             else cell.copy(status = CellStatus.USER_INPUT)
         }
 
-        suspend fun emitStep(r: Int, c: Int, status: CellStatus) {
+        suspend fun emitStep(r: Int, c: Int, status: CellStatus, isBacktrack: Boolean = false) {
             if (currentBoard.grid[r][c].status != CellStatus.INITIAL) {
                 currentBoard = currentBoard.setCell(r, c, boardArr[r][c].takeIf { it != 0 }, status)
             }
+            if (isBacktrack) backtracks++
             steps++
             val time = System.currentTimeMillis() - startTime
             emit(SolverStep(currentBoard, SolverStats(steps, time, backtracks, 0f)))
@@ -41,10 +42,13 @@ class ConstraintPropagationSolver : SudokuAlgorithm {
             return (1..9).filter { valid[it] }
         }
         
+        // Propagate constraints (Naked Singles and Hidden Singles)
         suspend fun propagate(): Boolean {
             var changed = true
             while (changed) {
                 changed = false
+                
+                // 1. Naked Singles: Cell has only one possible value
                 for (r in 0 until 9) {
                     for (c in 0 until 9) {
                         if (boardArr[r][c] == 0) {
@@ -55,6 +59,41 @@ class ConstraintPropagationSolver : SudokuAlgorithm {
                                 changed = true
                                 emitStep(r, c, CellStatus.SOLVER_ACTIVE)
                             }
+                        }
+                    }
+                }
+                
+                // 2. Hidden Singles: A number can only go into one cell in a row/col/box
+                for (num in 1..9) {
+                    // Check rows
+                    for (r in 0 until 9) {
+                        var possibleCols = mutableListOf<Int>()
+                        for (c in 0 until 9) {
+                            if (boardArr[r][c] == 0 && getValidValues(r, c).contains(num)) {
+                                possibleCols.add(c)
+                            }
+                        }
+                        if (possibleCols.size == 1) {
+                            val c = possibleCols[0]
+                            boardArr[r][c] = num
+                            changed = true
+                            emitStep(r, c, CellStatus.SOLVER_ACTIVE)
+                        }
+                    }
+                    
+                    // Check columns
+                    for (c in 0 until 9) {
+                        var possibleRows = mutableListOf<Int>()
+                        for (r in 0 until 9) {
+                            if (boardArr[r][c] == 0 && getValidValues(r, c).contains(num)) {
+                                possibleRows.add(r)
+                            }
+                        }
+                        if (possibleRows.size == 1) {
+                            val r = possibleRows[0]
+                            boardArr[r][c] = num
+                            changed = true
+                            emitStep(r, c, CellStatus.SOLVER_ACTIVE)
                         }
                     }
                 }
@@ -110,8 +149,7 @@ class ConstraintPropagationSolver : SudokuAlgorithm {
                         }
                     }
                     boardArr[row][col] = 0
-                    backtracks++
-                    emitStep(row, col, CellStatus.SOLVER_BACKTRACK)
+                    emitStep(row, col, CellStatus.SOLVER_BACKTRACK, true)
                 }
             }
             return false

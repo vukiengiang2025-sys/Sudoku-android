@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.domain.algorithms.BacktrackingSolver
 import com.example.domain.algorithms.ConstraintPropagationSolver
 import com.example.domain.algorithms.DancingLinksSolver
+import com.example.domain.algorithms.HybridSolver
 import com.example.domain.algorithms.MRVSolver
 import com.example.domain.algorithms.SudokuAlgorithm
 import com.example.domain.models.CellStatus
@@ -34,7 +35,8 @@ data class SudokuUiState(
         BacktrackingSolver(), 
         MRVSolver(),
         ConstraintPropagationSolver(),
-        DancingLinksSolver()
+        DancingLinksSolver(),
+        HybridSolver()
     ),
     val currentSpeed: SolverSpeed = SolverSpeed.FAST,
     val isSolved: Boolean = false,
